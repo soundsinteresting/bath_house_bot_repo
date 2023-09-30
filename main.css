@@ -1,55 +1,47 @@
 #game-container {
-    width: 320px; /* adjust as needed */
-    height: 320px; /* adjust as needed */
+    width: 800px; /* adjust as needed */
+    height: 800px; /* adjust as needed */
     position: absolute;
     top: 0px; left: 0px;  
     display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    grid-template-rows: repeat(10, 1fr);
-    gap: 1px;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(20, 1fr);
+    gap: 0.1px;
   }
 
   #main-canvas {
-    width: 320px; /* adjust as needed */
-    height: 320px; /* adjust as needed */
+    width: 800px; /* adjust as needed */
+    height: 400px; /* adjust as needed */
     position: absolute;
     top: 0px; left: 0px;  
     z-index: 100;
     pointer-events: none;
-    border: 1px solid black;
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    grid-template-rows: repeat(10, 1fr);
-    gap: 1px;
+    border: 1px solid black;   
   }
   
+  #transparent-layer {
+    width: 800px; /* adjust as needed */
+    height: 800px; /* adjust as needed */
+    position: absolute;
+    top: 0px; left: 0px;  
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(20, 1fr);
+    pointer-events: none;
+    gap: 0.1px;
+  }
+
+
   .tile {
     background-image: url("assets/pictures/tile.png");
     background-size: cover;
   }
-  
-  .character {
-    position: relative;
-    width: 16px;
-    height: 18px;
-    background-image: url("assets/pictures/greenhatwalk.png");
-    background-size: contain;
-    background-repeat: no-repeat;
+
+  .poolbutton {
+    background-image: url("assets/pictures/pool/fourlines.png");
+    background-size: cover;
   }
   
-  .character.down {
-    background-position-y: 0;
-  }
+
   
-  .character.left {
-    background-position-y: -18px;
-  }
-  
-  .character.right {
-    background-position-y: -36px;
-  }
-  
-  .character.up {
-    background-position-y: -54px;
-  }
   
