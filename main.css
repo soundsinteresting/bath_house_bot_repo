@@ -31,6 +31,17 @@
     gap: 0.1px;
   }
 
+  #obj-layer-1 {
+    width: 800px; /* adjust as needed */
+    height: 800px; /* adjust as needed */
+    position: absolute;
+    top: 0px; left: 0px;  
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(20, 1fr);
+    pointer-events: none;
+    gap: 0.1px;
+  }
 
   .tile {
     background-image: url("assets/pictures/tile.png");
