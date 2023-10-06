@@ -140,7 +140,7 @@ function find_path(sp, ep, fg, x_min, x_max, y_min, y_max) {
   }
   
   // No path found
-  return null;
+  return [];
 }
 
 
@@ -423,6 +423,7 @@ class Character {
         }
         else if(this.state == 'leave_now'){
           this.leave_now = 1;
+          this.path = [];
         }
     }
 
@@ -449,7 +450,7 @@ class Character {
       if (! tuple_in_list(destination, floor_location_list)){
           for (let i=0;i<neighbors.length;i++){
             if(tuple_in_list([destination[0]+neighbors[i][0], destination[1]+ neighbors[i][1]], floor_location_list)){
-              sp = [destination[0]+neighbors[i][0], destination[1]+ neighbors[i][1]];
+              destination = [destination[0]+neighbors[i][0], destination[1]+ neighbors[i][1]];
               break;
             }
           }
@@ -457,6 +458,7 @@ class Character {
 
       this.path = find_path(sp, destination, floor_location_list, 0, ntileperrow, 0, ntilerow);
 
+    
     }
 
     coord2pos(coord){
@@ -569,6 +571,16 @@ class Character {
       this.walk();
     }
   }
+
+function check_enter_or_exit(x,y){
+  if(x == entrance_position[0] && y == entrance_position[1]){
+    return true;
+  }
+  else if(x == exit_position[0] && y == exit_position[1]){
+    return true;
+  }
+  return false;
+}
 
 function build_pool_here(x,y){
     const transparentLayer = document.getElementById("transparent-layer");
@@ -735,6 +747,9 @@ function build_something(x,y) {
         if (tuple_in_list([x,y], pool_location_list)){
           return;
         }
+        if (check_enter_or_exit(x,y)){
+          return;
+        }
         // graphical manipulations
         build_pool_here(x,y)
 
@@ -760,6 +775,9 @@ function build_something(x,y) {
     else if (gameState == 'demolish'){
         console.log(`Clicked tile: x=${x}, y=${y}, to demolish`);
 
+        if (check_enter_or_exit(x,y)){
+          return;
+        }
         if (tuple_in_list([x,y], pool_location_list)){
 
             if (construction_list[y*ntileperrow+x][2].length > 0){
@@ -828,6 +846,13 @@ function initializeGame() {
     for (let y = 0; y < ntilerow; y++) {
       for (let x = 0; x < ntileperrow; x++) {
         const tile = createTile(x, y);
+        if (x == entrance_position[0] && y == entrance_position[1]){
+          tile.style.backgroundImage = "url('assets/pictures/enter_tile.png')";
+        }
+        else if (x == exit_position[0] && y == exit_position[1]){
+          tile.style.backgroundImage = "url('assets/pictures/exit_tile.png')"
+
+        }
         gameContainer.appendChild(tile);
         construction_list.push([tile,[],[]]); // the first list for decoration, the second list for objects
         floor_location_list.push([x,y]);
@@ -893,7 +918,7 @@ function initializeGame() {
     let ctx = canvas.getContext('2d');
 
     // some new customers might arrive
-    newcustomer = getRandomNumberWithProbabilities([0,1],[0.99,0.01]);
+    newcustomer = getRandomNumberWithProbabilities([0,1],[0.97,0.03]);
     if (character_list.length >= 10){
       newcustomer = 0;
     }
@@ -909,7 +934,7 @@ function initializeGame() {
       const character = character_list[i];
       character.update();
       if (character.leave_now == 1){
-        removeidx.push(i)
+        removeidx.push(i);
         //delete character;
       }
       else {
@@ -921,7 +946,7 @@ function initializeGame() {
         //delete character_list[removeidx.length-i];
         console.log('someone leaving');
         console.log(character_list.length);
-        character_list.splice(removeidx[removeidx.length-i],1);
+        character_list.splice(removeidx[removeidx.length-i-1],1);
         console.log('after leaving');
         console.log(character_list.length);
     }
