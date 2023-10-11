@@ -384,13 +384,35 @@ class Character {
           this.next_state = 'random_target_in_pool';
         }
         else if (this.state == 'random_target_in_pool'){
-          let pool_locations = findAdjacentSubset(pool_location_list, this.coordX, this.coordY);
+          //this.transform_position();
+          let j = 0;
+          for (let i =0;i<construction_location_list.length;i++){
+            if (tuple_in_list([this.coordX, this.coordY],construction_location_list[i])){
+              j = i;
+              break;
+            }
+          }
+          let pool_locations = findAdjacentSubset(construction_location_list[j], this.coordX, this.coordY);
           let destination = chooseRandomElement(pool_locations);
-          this.path = find_path([this.coordX, this.coordY], destination, pool_location_list, 0, ntileperrow, 0, ntilerow);
+          this.path = find_path([this.coordX, this.coordY], destination, construction_location_list[j], 0, ntileperrow, 0, ntilerow);
           this.next_state = 'leaving_pool';
         }
         else if (this.state == 'leaving_pool'){
-          let in_this_pool = findAdjacentSubset(pool_location_list, this.coordX, this.coordY);
+          let j = 0;
+          this.transform_position(this.positionX, this.positionY);
+
+          let findexit = false;
+          for (let i =0;i<construction_location_list.length;i++){
+            if (tuple_in_list([this.coordX, this.coordY],construction_location_list[i])){
+              j = i;
+              findexit = true;
+              break;
+            }
+          }
+          //if (! findexit){
+          //  return;
+          //}
+          let in_this_pool = findAdjacentSubset(construction_location_list[j], this.coordX, this.coordY);
           const pool_exit_locations = assembly_positions.map((item) => item[1]);
 
           let sorti = [];
@@ -400,7 +422,7 @@ class Character {
             }
           }
           let destination = chooseRandomElement(sorti);
-          this.path = find_path([this.coordX, this.coordY], destination, pool_location_list, 0, ntileperrow, 0, ntilerow);
+          this.path = find_path([this.coordX, this.coordY], destination, construction_location_list[j], 0, ntileperrow, 0, ntilerow);
           this.next_state = 'exiting_pool';
         }
         else if (this.state == 'exiting_pool'){
@@ -436,6 +458,8 @@ class Character {
       let destination = this.path[this.path.length-1];
       this.transform_position(this.positionX,this.positionY);
       let sp = [this.coordX, this.coordY];
+
+      
       let neighbors = [[-1,0],[-1,-1],[-1,1],[0,-1],[0,1],[1,0],[1,-1],[1,1]];
       if (! tuple_in_list([this.coordX, this.coordY], floor_location_list)){
           for (let i=0;i<neighbors.length;i++){
@@ -582,26 +606,26 @@ function check_enter_or_exit(x,y){
   return false;
 }
 
-function build_pool_here(x,y){
+function build_pool_here(x,y,which_pool,the_location_list){
     const transparentLayer = document.getElementById("transparent-layer");
     
     ClearList(construction_list[y*ntileperrow+x][1],transparentLayer)
-    let sidewater = [+tuple_in_list([x+1,y], pool_location_list),
-        +tuple_in_list([x,y+1], pool_location_list),
-        +tuple_in_list([x-1,y], pool_location_list),
-        +tuple_in_list([x,y-1], pool_location_list)];
-    let cornerwater = [+tuple_in_list([x+1,y-1], pool_location_list),
-        +tuple_in_list([x+1,y+1], pool_location_list),
-        +tuple_in_list([x-1,y+1], pool_location_list),
-        +tuple_in_list([x-1,y-1], pool_location_list)];
+    let sidewater = [+tuple_in_list([x+1,y], the_location_list),
+        +tuple_in_list([x,y+1], the_location_list),
+        +tuple_in_list([x-1,y], the_location_list),
+        +tuple_in_list([x,y-1], the_location_list)];
+    let cornerwater = [+tuple_in_list([x+1,y-1], the_location_list),
+        +tuple_in_list([x+1,y+1], the_location_list),
+        +tuple_in_list([x-1,y+1], the_location_list),
+        +tuple_in_list([x-1,y-1], the_location_list)];
     
     const sumofnoedge = sidewater.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
     if (sumofnoedge == 4){
             construction_list[y*ntileperrow+x][0].style.backgroundImage = 
-          `url(assets/pictures/pool/water.png)`;
+          "url(\'"+which_pool+"/water.png\')";
           for (let i = 0; i < 4; i++) {
             if (cornerwater[i] == 0){
-                const corner = createTileTop(x,y,"assets/pictures/pool/corner.png");
+                const corner = createTileTop(x,y,which_pool+"/corner.png");
                 corner.style.transform = "rotate("+String(90*i)+"deg)";
                 corner.style.backgroundColor = "initial"; 
                 transparentLayer.appendChild(corner);
@@ -612,10 +636,10 @@ function build_pool_here(x,y){
     else if (sumofnoedge == 3){
            //add line
             construction_list[y*ntileperrow+x][0].style.backgroundImage = 
-          `url(assets/pictures/pool/water.png)`;
+            "url(\'"+which_pool+"/water.png\')";
           for (let i = 0; i < 4; i++) {
             if (sidewater[i] == 0){
-                const side = createTileTop(x,y,"assets/pictures/pool/oneline.png");
+                const side = createTileTop(x,y, which_pool+"/oneline.png");
                 side.style.transform = "rotate("+String(90*i)+"deg)";
                 side.style.backgroundColor = "initial"; 
                 transparentLayer.appendChild(side);
@@ -625,7 +649,7 @@ function build_pool_here(x,y){
           //add corner
           for (let i = 0; i < 4; i++) {
             if ((cornerwater[i] == 0)&&(sidewater[i]==1)&&(sidewater[(i+3)%4]==1)){
-                const corner = createTileTop(x,y,"assets/pictures/pool/corner.png");
+                const corner = createTileTop(x,y, which_pool+"/corner.png");
                 corner.style.transform = "rotate("+String(90*i)+"deg)";
                 corner.style.backgroundColor = "initial"; 
                 transparentLayer.appendChild(corner);
@@ -638,10 +662,10 @@ function build_pool_here(x,y){
                 //separate lines
 
                 construction_list[y*ntileperrow+x][0].style.backgroundImage = 
-                `url(assets/pictures/pool/water.png)`;
+                "url(\'"+which_pool+"/water.png\')";
                 for (let i = 0; i < 4; i++) {
                     if (sidewater[i] == 0){
-                        const side = createTileTop(x,y,"assets/pictures/pool/oneline.png");
+                        const side = createTileTop(x,y, which_pool+"/oneline.png");
                         side.style.transform = "rotate("+String(90*i)+"deg)";
                         side.style.backgroundColor = "initial"; 
                         transparentLayer.appendChild(side);
@@ -651,14 +675,14 @@ function build_pool_here(x,y){
             }
             else{
                 construction_list[y*ntileperrow+x][0].style.backgroundImage = 
-                `url(assets/pictures/pool/twolines.png)`;
+                "url(\'"+which_pool+"/twolines.png\')";
                 for (let i = 0; i < 4; i++) {
                   if (sidewater[i]+sidewater[(i+3)%4] == 0){
                       construction_list[y*ntileperrow+x][0].style.transform = "rotate("+String(90*i)+"deg)";
                       
                       //add corner
                       if (cornerwater[(i+2)%4]==0){
-                        const corner = createTileTop(x,y,"assets/pictures/pool/corner.png");
+                        const corner = createTileTop(x,y, which_pool+"/corner.png");
                         corner.style.transform = "rotate("+String(90*((i+2)%4))+"deg)";
                         corner.style.backgroundColor = "initial"; 
                         transparentLayer.appendChild(corner);
@@ -673,7 +697,7 @@ function build_pool_here(x,y){
     }
     else if (sumofnoedge == 1){
             construction_list[y*ntileperrow+x][0].style.backgroundImage = 
-          `url(assets/pictures/pool/threelines.png)`;
+            "url(\'"+which_pool+"/threelines.png\')";
           for (let i = 0; i < 4; i++) {
             if (sidewater[(i+2)%4] == 1){
                 construction_list[y*ntileperrow+x][0].style.transform = "rotate("+String(90*i)+"deg)";
@@ -682,17 +706,20 @@ function build_pool_here(x,y){
     }
     else if (sumofnoedge == 0){
             construction_list[y*ntileperrow+x][0].style.backgroundImage = 
-          `url(assets/pictures/pool/fourlines.png)`;
+            "url(\'"+which_pool+"/fourlines.png\')";
     }
 }  
 
-function build_obj_here(x,y){
+function build_obj_here(x,y,the_location_list){
     const objLayer = document.getElementById("obj-layer-1");
     
-    let sidewater = [+tuple_in_list([x+1,y], pool_location_list),
-      +tuple_in_list([x,y+1], pool_location_list),
-      +tuple_in_list([x-1,y], pool_location_list),
-      +tuple_in_list([x,y-1], pool_location_list)];
+    let sidewater = [+tuple_in_list([x+1,y], the_location_list),
+      +tuple_in_list([x,y+1], the_location_list),
+      +tuple_in_list([x-1,y], the_location_list),
+      +tuple_in_list([x,y-1], the_location_list)];
+    //console.log('sidewater');
+    //console.log(sidewater);
+    //console.log(the_location_list)
     const sumofnoedge = sidewater.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
     if (construction_list[y*ntileperrow+x][2].length > 0){
       return
@@ -734,27 +761,33 @@ function check_neighbor_pool(x,y){
     for (let i=0;i<8;i++){
         nx = nlist[i][0]+x;
         ny = nlist[i][1]+y;
-        if (tuple_in_list([nx,ny],pool_location_list)){
-            build_pool_here(nx,ny);
+        for (let j=0;j<construction_path_list.length;j++){
+          if (tuple_in_list([nx,ny],construction_location_list[j])){
+            build_pool_here(nx,ny,construction_path_list[j],construction_location_list[j]);
         }
+        }
+        
     }
 }
 
 function build_something(x,y) {
-    if (gameState=='buildpool'){
-        console.log(`build pool at: x=${x}, y=${y}`);
+    for (let j=0;j<construction_location_list.length;j++){
+      const lastIndex = construction_path_list[j].lastIndexOf('/');
+      target_name = "build"+construction_path_list[j].substring(lastIndex + 1);
+      if (gameState==target_name){
+        console.log(target_name + `at: x=${x}, y=${y}`);
 
-        if (tuple_in_list([x,y], pool_location_list)){
+        if (!tuple_in_list([x,y], floor_location_list)){
           return;
         }
         if (check_enter_or_exit(x,y)){
           return;
         }
         // graphical manipulations
-        build_pool_here(x,y)
+        build_pool_here(x,y, construction_path_list[j], construction_location_list[j]);
 
         // change
-        pool_location_list.push([x,y]);
+        construction_location_list[j].push([x,y]);
         check_neighbor_pool(x,y);     
         
         // change variables
@@ -764,12 +797,18 @@ function build_something(x,y) {
         for (let i =0;i<character_list.length;i++){
           character_list[i].rethink();
         }
+        return;
     }
-    else if (gameState=='buildobj'){
+    }
+    
+    if (gameState=='buildobj'){
         console.log(`attempt to build at: x=${x}, y=${y}`);
-        if (tuple_in_list([x,y],construction_location_list[0])){
-          build_obj_here(x,y);
+        for (let j=0;j<construction_location_list.length;j++){
+        if (tuple_in_list([x,y],construction_location_list[j])){
+          build_obj_here(x,y,[].concat(...construction_location_list));
+          return;
         }
+      }
         
     }
     else if (gameState == 'demolish'){
@@ -778,8 +817,16 @@ function build_something(x,y) {
         if (check_enter_or_exit(x,y)){
           return;
         }
-        if (tuple_in_list([x,y], pool_location_list)){
-
+        let isConstruction = false;
+        let cid = 0;
+        for (let j=0;j<construction_location_list.length;j++){
+          if(tuple_in_list([x,y], construction_location_list[j])){
+            isConstruction = true;
+            cid = j;
+            break;
+          }
+        }
+        if (isConstruction){
             if (construction_list[y*ntileperrow+x][2].length > 0){
               // only clear the objects
               ClearList(construction_list[y*ntileperrow+x][2], document.getElementById("obj-layer-1"));
@@ -791,7 +838,7 @@ function build_something(x,y) {
               
             ClearList(construction_list[y*ntileperrow+x][1], document.getElementById("transparent-layer"))
           
-            pool_location_list = deleteMatchingElement(pool_location_list,x,y)
+            construction_location_list[cid] = deleteMatchingElement(construction_location_list[cid],x,y)
             check_neighbor_pool(x,y);
             floor_location_list.push([x,y]);
             //for (let i =0;i<character_list.length;i++){
@@ -862,12 +909,19 @@ function initializeGame() {
     const poolbutton = createActionButton("assets/pictures/pool/fourlines.png",
     ()=>{gameState='buildpool';console.log(gameState);},8,12);
     gameContainer.appendChild(poolbutton)
+
+    const fancypoolbutton = createActionButton("assets/pictures/fancypool/fourlines.png",
+    ()=>{gameState='buildfancypool';console.log(gameState);},9,12);
+    gameContainer.appendChild(fancypoolbutton)
+
     const cancelbutton = createActionButton("assets/pictures/cancel.png",
     ()=>{gameState='demolish';console.log(gameState);},12,12);
     gameContainer.appendChild(cancelbutton)
+
     const stairbutton_h = createActionButton("assets/pictures/pool/objects/stair_horizontal.png",
     ()=>{gameState='buildobj';objtoplace = 'assets/pictures/pool/objects/stair_horizontal.png'; console.log(gameState);},8,13);
     gameContainer.appendChild(stairbutton_h)
+
     const stairbutton_v = createActionButton("assets/pictures/pool/objects/stair_vertical.png",
     ()=>{gameState='buildobj';objtoplace = 'assets/pictures/pool/objects/stair_vertical.png'; console.log(gameState);},9,13);
     gameContainer.appendChild(stairbutton_v)
@@ -899,7 +953,10 @@ function initializeGame() {
 
   let floor_location_list = [];
   let pool_location_list = [];
-  let construction_location_list = [pool_location_list];
+  let fancy_pool_location_list = [];
+  let construction_location_list = [pool_location_list,fancy_pool_location_list];
+  let construction_path_list = ['assets/pictures/pool','assets/pictures/fancypool'];
+
 
   let assembly_positions = [];// each element is [[xfloor,yfloor],[xpool, ypool]];
   let entrance_position = [10,1];
